@@ -49,7 +49,7 @@ flowchart LR
    BE -->|HTTP responses| FE
 
    FE -->|Authorization: Bearer token| BE
-   BE -->|issues JWT (on auth)| FE
+   BE -->|issues JWT on auth| FE
 
    BE -->|Read/Write| DB
    DB -->|Query results| BE
