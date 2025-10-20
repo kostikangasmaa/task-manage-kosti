@@ -28,6 +28,36 @@ A full-stack task management application built for learning DevOps practices inc
 - React Router
 - Axios
 
+## Architecture
+
+```mermaid
+flowchart LR
+   subgraph Frontend["Frontend"]
+      FE["React App"]
+   end
+
+   subgraph Backend["Backend"]
+      BE["API Server (Node + Express)"]
+      Auth[(JWT)]
+   end
+
+   subgraph Data["Data & Persistence"]
+      DB[(PostgreSQL)]
+   end
+
+   FE -->|API calls| BE
+   BE -->|HTTP responses| FE
+
+   FE -->|Authorization: Bearer token| BE
+   BE -->|issues JWT on auth| FE
+
+   BE -->|Read/Write| DB
+   DB -->|Query results| BE
+
+   BE -->|issue/verify token| Auth
+   Auth -->|token used by| BE
+ ```
+
 # Project Tasks
 
 ### Prerequisites
@@ -159,6 +189,10 @@ Your goal is to implement a CI pipeline for the Task Management System:
    - Optionally, push images to a container registry.
 
 ## Task 5. Deployment to Render.com
+
+You can choose either **Path 1 (Manual deployment & CD workflow)** or **Path 2 (Deployment using containers)** for deploying your application to Render.com. 
+
+### Path 1: Manual deployemnt & CD workflow
    1. **PostgreSQL database** 
       - Create PostgreSQL database to render.com
       - You should remember database URL (Internal Database URL) for the next step 2.
@@ -183,6 +217,8 @@ Your goal is to implement a CI pipeline for the Task Management System:
       Database connection established successfully.
       Database models synchronized.
       ```
+      
+      Check the backend health endpoint: `https://your-backend.onrender.com/api/health`
 
    3. **Frontend**
       - Create Static site for the frontend
@@ -193,8 +229,87 @@ Your goal is to implement a CI pipeline for the Task Management System:
          ```
          VITE_API_URL=<BACKEND URL>/api
          ```
+   4. **Update CI/CD workflow**
+      - Disable automatic deployment for both backend and frontend services in Render.com.
+      - Update your CI workflow from Task 2 to include a CD (Continuous Deployment) step.
+      - Configure deployment to trigger only when a new release tag is pushed.
+
+> **Tip:** Render.com provides **Blueprints**, which are YAML files that define your entire infrastructure as code (IaC). Blueprints allow you to version, review, and automate the setup of services, databases, environment variables, and more directly from your repository.  
+>  
+> With Blueprints, you can:
+> - Describe all resources (web services, static sites, databases) in a single file.
+> - Automate deployments and updates by pushing changes to your repository.
+> - Ensure consistent environments across teams and deployments.
+>  
+> To use Blueprints for deployment:
+> 1. Create a `render.yaml` file in your repository root.
+> 2. Define your services, build commands, environment variables, and database configuration in the file.
+> 3. Connect your repository to Render.com and enable Blueprint deployment.
+> 4. Render will automatically provision and update resources based on your Blueprint file.
+>  
+> Learn more: [Render Blueprints documentation](https://render.com/docs/infrastructure-as-code)
+
+### Path 2: Deployment using containers
+
+TÄMÄ OLISI VAIHTOEHTOINEN POLKU. TÄTÄ EN OLE ITSE TESTANNUT
+
+This option deploys both backend and frontend as Docker containers on Render.com.
+
+1. **Create Dockerfiles**
+   - Create a `Dockerfile` in both `backend` and `frontend` directories if you haven't done these in Task 4.
+
+2. **Build and Test Locally**
+   - Build and test docker files locally
+
+3. **Push Images to Registry**
+   - Use Docker Hub
+  
+4. **Create Services on Render.com**
+   - Create a new **Web Service** for backend:
+     - Select "Deploy an existing Docker image".
+     - Set image source to your registry.
+     - Set environment variables.
+   - Create a new **Web Service** for frontend:
+     - Use the frontend image.
+     - Set environment variables.
+
+5. **Configure Database**
+   - Create a PostgreSQL database on Render.com.
+   - Update backend environment variables with the internal database URL.
+
+6. **Update CI/CD Workflow**
+   - Add steps to build and push Docker images on release/tag.
+   - Trigger deployment on Render.com after pushing new images.
+  
+**References:**
+- [Render Docker Deployment Docs](https://render.com/docs/docker)
 
 ## Task 6. Monitoring
-- SOMETHING SIMPLE HERE: Bäkkärissä on health check url. Lokituksen monitorointi?
+- SOMETHING SIMPLE HERE: Bäkkärissä on health check url. Lokituksen monitorointi? Tämä vaatisi varmaan lisäyksi lokitukseen sovelluksessa. Jätetäänkö tämä osuus pois lopputyöstä??
 
 **TODO** PISTEYTYS TASKEILLE
+
+## Deliveries & Submission
+For successful completion of the project, submit the following:
+
+1. **Source Code Repository**
+   - Complete codebase for backend and frontend.
+   - Include all configuration files.
+
+2. **CI/CD Workflow**
+   - GitHub Actions workflow file(s) implementing CI (testing, linting, security checks) and CD (deployment steps).
+
+3. **Docker Integration**
+   - Dockerfiles for backend and frontend.
+   - Instructions or scripts for building and running containers locally.
+
+4. **Deployment**
+   - Render.com service URLs for backend and frontend.
+   - Description of environment variable setup and deployment process.
+
+5. **Monitoring**
+   - Description of implemented health checks and logging/monitoring approach.
+
+6. **Documentation**
+   - Updated `README.md` with setup, usage, and deployment instructions.
+   - Brief summary of what was implemented, challenges faced, and lessons learned. 
