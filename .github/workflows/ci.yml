@@ -2,46 +2,59 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  lint:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install dependencies for backend
-        working-directory: ./backend
-        run: npm install
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
 
-      - name: Install dependencies for frontend
-        working-directory: ./frontend
-        run: npm install
+      - name: Install dependencies (workspaces)
+        run: npm run install:all
 
-      - name: Run linter for backend
-        working-directory: ./backend
-        run: npm run lint
+      - name: Lint frontend
+        run: npm run lint:frontend
 
-      - name: Run linter for frontend
-        working-directory: ./frontend
-        run: npm run lint
+      - name: Lint backend
+        run: npm run lint:backend
 
-  test:
+      - name: Run frontend tests
+        run: npm run test:frontend
+
+      - name: Run backend tests
+        run: npm run test:backend
+
+      - name: Check for outdated dependencies
+        run: npm outdated --workspaces || true
+
+      - name: Audit dependencies (fail on HIGH+)
+        run: npm audit --workspaces --audit-level=high
+
+  codeql:
+    name: CodeQL Analysis
     runs-on: ubuntu-latest
-    needs: lint
+    needs: build-and-test
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Run tests for backend
-        working-directory: ./backend
-        run: npm run test
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
 
-      - name: Run tests for frontend
-        working-directory: ./frontend
-        run: npm run test
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Run CodeQL analysis
+        uses: github/codeql-action/analyze@v3
