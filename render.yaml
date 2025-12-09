@@ -1,0 +1,55 @@
+# Exported from Render on 2025-12-09T19:10:32Z
+version: "1"
+projects:
+- name: task-manager-devops
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: task-manage-kosti-1
+      runtime: static
+      repo: https://github.com/kostikangasmaa/task-manage-kosti
+      envVars:
+      - key: VITE_API_URL
+        sync: false
+      buildCommand: npm install && npm run build
+      staticPublishPath: dist
+      autoDeployTrigger: commit
+      rootDir: ./frontend
+    - type: web
+      name: task-manage-kosti
+      runtime: docker
+      repo: https://github.com/kostikangasmaa/task-manage-kosti
+      plan: free
+      envVars:
+      - key: DB_SYNC
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: JWT_EXPIRES_IN
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: task-manager-postgres
+          property: connectionString
+      - key: PORT
+        sync: false
+      - key: NODE_ENV
+        sync: false
+      region: frankfurt
+      dockerContext: .
+      dockerfilePath: ./Dockerfile
+      autoDeployTrigger: commit
+      rootDir: ./backend
+    databases:
+    - name: task-manager-postgres
+      databaseName: task_manager_postgres_liwh
+      user: task_manager_postgres_liwh_user
+      plan: free
+      region: frankfurt
+      ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+      postgresMajorVersion: "16"
